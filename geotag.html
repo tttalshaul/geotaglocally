@@ -1,16 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Geotag Photos</title>
+  <title>Geotag Photos using gpx file</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/piexifjs"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
   <script src="geotag_photos.js"></script>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Geotag Photos</h1>
-  <input type="file" id="gpxFile" accept=".gpx">
-  <input type="file" id="photoFiles" multiple accept=".jpg">
-  <button type="button" onclick="geotagPhotos()">Geotag Photos</button>
+  <header>
+    <h1>
+      Geotag Photos using gpx file
+    </h1>
+    <div class="subheaders">
+      <h3>
+        This site allows you to add gps coordinates to jpeg photos taken in DSLR cameras (or converted from raw files).
+      </h3>
+      <h3>
+        Each photo is examined for it's date and time (TimeStamp) and this is compared to all points in the gpx file. 
+      </h3>
+      <h3>
+        The point that has the smallest difference from the timestamp of the photo is chosen, and it's coordinates are added to the photo.
+      </h3>
+      <h3>
+        (Photos that were taken more than 15 minutes before the first point or after the last point in the gpx file are excluded)
+      </h3>
+      <h3>
+        In the end of the process, a zipped archive of all the photos that have been edited succesfully to add gps coordinates is downloaded.
+      </h3>
+      <h3>
+        You can track your route using an app like PixTrack (for iPhone) and export gpx file (that's free also!)
+      </h3>
+    </div>
+  </header>
+  <div class="uploads">
+    <label for="gpxFile">Choose a gpx file</label>
+    <br/>
+    <input type="file" id="gpxFile" accept=".gpx" value="Select a gpx file" onchange="chooseGpx()">
+  </div>
+  <div class="uploads">
+    <label for="photoFiles">Choose jpeg files</label>
+    <br/>
+    <input type="file" id="photoFiles" multiple accept=".jpg" value="Select jpg photos" onchange="chooseJpegs()">
+  </div>
+  <div class="run">
+    <label for="run_geotag">Geotag Photos</label>
+    <button id="run_geotag" type="button" onclick="geotagPhotos()">Geotag Photos</button>
+  </div>
+  <div id="information"></div>
+  <div>
+    <img src="https://images.unsplash.com/photo-1619468129361-605ebea04b44?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2942&q=80"/>
+    <blockquote>
+      <p>
+        Photo by <a href="https://unsplash.com/photos/Z8UgB80_46w">GeoJango Maps</a> on <a href="https://unsplash.com/">Unsplash</a>
+      </p>
+    </blockquote>
+  </div>
 </body>
 </html>
