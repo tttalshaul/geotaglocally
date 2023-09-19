@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Geotag Photos</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/piexifjs"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+  <script src="geotag_photos.js"></script>
+</head>
+<body>
+  <h1>Geotag Photos</h1>
+  <input type="file" id="gpxFile" accept=".gpx">
+  <input type="file" id="photoFiles" multiple accept=".jpg">
+  <button type="button" onclick="geotagPhotos()">Geotag Photos</button>
+</body>
+</html>
