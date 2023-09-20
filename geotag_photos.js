@@ -44,11 +44,11 @@ function geotagPhotos() {
   information = document.getElementById('information');
   gpx_button = document.getElementById('gpxFile');
   photos_button = document.getElementById('photoFiles');
-  if (gpx_button.length == 0) {
+  if (gpx_button.files.length == 0) {
     information.textContent = 'No gpx file choosen';
     return;
   }
-  else if (photos_button.length == 0) {
+  else if (photos_button.files.length == 0) {
     information.textContent = 'No jpeg files choosen';
     return;
   }
@@ -102,52 +102,58 @@ function geotagPhotos() {
         var file_data = e.target.result;
         var exif = piexif.load(file_data);
 
-        // Get the photo's time from the EXIF data
-        const photoTime = moment(exif.Exif[piexif.ExifIFD.DateTimeOriginal], 'YYYY:MM:DD HH:mm:ss');
+        // Skip photos that have GPS coordinates
+        if (exif.GPS[piexif.GPSIFD.GPSLatitude] === undefined) {
+          // Get the photo's time from the EXIF data
+          const photoTime = moment(exif.Exif[piexif.ExifIFD.DateTimeOriginal], 'YYYY:MM:DD HH:mm:ss');
 
-        // Skip photos that were taken outside of track time frame
-        if (Math.abs(photoTime.toDate() - min_time) < 900000 || 
-            Math.abs(photoTime.toDate() - max_time) < 900000) { // 15 minutes
-          // Find the nearest time in the GPX file
-          const nearestTime = findNearestTime(new Date(photoTime), times);
+          // Skip photos that were taken outside of track time frame
+          if (Math.abs(photoTime.toDate() - min_time) < 900000 || 
+              Math.abs(photoTime.toDate() - max_time) < 900000) { // 15 minutes
+            // Find the nearest time in the GPX file
+            const nearestTime = findNearestTime(new Date(photoTime), times);
 
-          // If there is a nearest time, geotag the photo
-          if (nearestTime) {
-            const nearestCoordinate = coordinates.find((coordinate) => {
-              return coordinate.time === nearestTime;
-            });
-
-            exif.GPS[piexif.GPSIFD.GPSLatitudeRef] = nearestCoordinate.latitude < 0 ? 'S' : 'N';
-            exif.GPS[piexif.GPSIFD.GPSLatitude] = piexif.GPSHelper.degToDmsRational(nearestCoordinate.latitude);
-            exif.GPS[piexif.GPSIFD.GPSLongitudeRef] = nearestCoordinate.longitude < 0 ? 'W' : 'E';
-            exif.GPS[piexif.GPSIFD.GPSLongitude] = piexif.GPSHelper.degToDmsRational(nearestCoordinate.longitude);
-
-            var exifbytes = piexif.dump(exif);
-            // piexif.remove(file_data);
-            var updated_file = piexif.insert(exifbytes, file_data);
-            const file_blob = dataURItoBlob(updated_file);
-
-            // Add the photo to the zip file with the geotagged coordinates
-            zip.file(photoFile.name, file_blob, {"base64": true});
-
-            // Download the zip file
-            if (Object.keys(zip.files).length == num_files) {
-              zip.generateAsync({ type: 'blob' }).then((blob) => {
-                  const url = URL.createObjectURL(blob);
-                  const downloadLink = document.createElement('a');
-                  downloadLink.href = url;
-                  downloadLink.download = 'geotagged_photos.zip';
-                  downloadLink.click();
-                  information.textContent = 'Done!';
+            // If there is a nearest time, geotag the photo
+            if (nearestTime) {
+              const nearestCoordinate = coordinates.find((coordinate) => {
+                return coordinate.time === nearestTime;
               });
+
+              exif.GPS[piexif.GPSIFD.GPSLatitudeRef] = nearestCoordinate.latitude < 0 ? 'S' : 'N';
+              exif.GPS[piexif.GPSIFD.GPSLatitude] = piexif.GPSHelper.degToDmsRational(nearestCoordinate.latitude);
+              exif.GPS[piexif.GPSIFD.GPSLongitudeRef] = nearestCoordinate.longitude < 0 ? 'W' : 'E';
+              exif.GPS[piexif.GPSIFD.GPSLongitude] = piexif.GPSHelper.degToDmsRational(nearestCoordinate.longitude);
+
+              var exifbytes = piexif.dump(exif);
+              // piexif.remove(file_data);
+              var updated_file = piexif.insert(exifbytes, file_data);
+              const file_blob = dataURItoBlob(updated_file);
+
+              // Add the photo to the zip file with the geotagged coordinates
+              zip.file(photoFile.name, file_blob, {"base64": true});
+
+              // Download the zip file
+              if (Object.keys(zip.files).length == num_files) {
+                zip.generateAsync({ type: 'blob' }).then((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = url;
+                    downloadLink.download = 'geotagged_photos.zip';
+                    downloadLink.click();
+                    information.textContent = 'Done!';
+                });
+              }
             }
+          }
+          else {
+            num_files = num_files - 1;
           }
         }
         else {
           num_files = num_files - 1;
         }
         if (num_files == 0) {
-          information.textContent = 'No photo was matched to gpx minimum and maximum timestamps';
+          information.textContent = 'No photo was without GPS coordinates and matched to gpx minimum and maximum timestamps';
         }    
       };
 
